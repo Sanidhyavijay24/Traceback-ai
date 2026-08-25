@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-25 02:59:17 UTC",
+  "timestamp": "2026-08-25 03:15:00 UTC",
   "total_scenarios": 18,
   "failure_scenarios_evaluated": 14,
   "failure_scenarios_passed": 14,
@@ -36,7 +36,7 @@
       "accuracy": 1.0
     }
   },
-  "elapsed_seconds": 0.14,
+  "elapsed_seconds": 0.15,
   "results": [
     {
       "scenario_id": "retrieval_01_unrelated_chunks",

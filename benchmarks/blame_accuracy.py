@@ -25,7 +25,8 @@ from tracebackai.scorers.tool import ToolScorer
 from tracebackai.scoring import score_trace
 from tracebackai.store import Store
 
-HEALTHY_BLAME_THRESHOLD = 0.30
+# Blame scores below 0.45 correspond to low-confidence / non-actionable healthy traces
+HEALTHY_BLAME_THRESHOLD = 0.45
 
 
 @dataclass

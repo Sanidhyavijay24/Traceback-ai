@@ -1,6 +1,6 @@
 # Blame Accuracy Benchmark Results
 
-> **Summary:** **100.0% Top-1 Accuracy** (14/14 failure scenarios correctly attributed) | **0/3 False Positives** on healthy traces | Execution time: **0.14s**
+> **Summary:** **100.0% Top-1 Accuracy** (14/14 failure scenarios correctly attributed) | **0/3 False Positives** on healthy traces | Execution time: **0.15s**
 
 ## Category Breakdown
 
