@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "traceback-ai"
+version = "0.1.0"
+description = "LLM agent execution tracer with failure attribution"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["llm", "ai", "tracing", "eval", "observability", "agents"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "click>=8.0",
+    "tiktoken>=0.5",
+]
+
+[project.optional-dependencies]
+semantic = ["sentence-transformers>=2.2"]
+anthropic = ["anthropic>=0.20"]
+openai = ["openai>=1.0"]
+langchain = ["langchain>=0.1"]
+dev = ["pytest", "pytest-cov", "ruff", "black", "build", "twine"]
+all = ["traceback-ai[semantic,anthropic,openai,langchain]"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tracebackai"]
+
+[project.scripts]
+traceback = "tracebackai.cli:cli"
+tb = "tracebackai.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/Sanidhyavijay24/traceback-ai"
+Issues = "https://github.com/Sanidhyavijay24/traceback-ai/issues"

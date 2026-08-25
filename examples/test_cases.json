@@ -1,0 +1,10 @@
+[
+  {
+    "input": "What is retrieval-augmented generation?",
+    "expected_keywords": ["retrieval", "augmented", "generation"]
+  },
+  {
+    "input": "How does RAG reduce hallucinations in language models?",
+    "expected_keywords": ["hallucinations", "context", "grounding"]
+  }
+]
