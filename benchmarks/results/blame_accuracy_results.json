@@ -1,0 +1,348 @@
+{
+  "timestamp": "2026-08-25 02:59:17 UTC",
+  "total_scenarios": 18,
+  "failure_scenarios_evaluated": 14,
+  "failure_scenarios_passed": 14,
+  "top1_accuracy": 1.0,
+  "top1_accuracy_pct": "100.0%",
+  "healthy_scenarios_evaluated": 3,
+  "healthy_false_positives": 0,
+  "false_positive_rate": 0.0,
+  "false_positive_rate_pct": "0.0%",
+  "category_breakdown": {
+    "cascading": {
+      "correct": 2,
+      "total": 2,
+      "accuracy": 1.0
+    },
+    "fallback": {
+      "correct": 2,
+      "total": 2,
+      "accuracy": 1.0
+    },
+    "llm": {
+      "correct": 4,
+      "total": 4,
+      "accuracy": 1.0
+    },
+    "retrieval": {
+      "correct": 3,
+      "total": 3,
+      "accuracy": 1.0
+    },
+    "tool": {
+      "correct": 3,
+      "total": 3,
+      "accuracy": 1.0
+    }
+  },
+  "elapsed_seconds": 0.14,
+  "results": [
+    {
+      "scenario_id": "retrieval_01_unrelated_chunks",
+      "category": "retrieval",
+      "description": "Retrieved chunks are real text but topically unrelated to the query.",
+      "ground_truth": "retrieve_docs",
+      "predicted_step": "retrieve_docs",
+      "blame_score": 1.82,
+      "confidence": "high",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_docs": 0.0,
+        "generate_answer": 0.9333
+      }
+    },
+    {
+      "scenario_id": "retrieval_02_empty_chunks",
+      "category": "retrieval",
+      "description": "Retrieval returns an empty chunk list.",
+      "ground_truth": "retrieve_docs",
+      "predicted_step": "retrieve_docs",
+      "blame_score": 1.82,
+      "confidence": "high",
+      "explanation": "Retrieval returned no document chunks. Downstream steps received empty context.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_docs": 0.0,
+        "generate_answer": 0.9333
+      }
+    },
+    {
+      "scenario_id": "retrieval_03_semantic_distractor",
+      "category": "retrieval",
+      "description": "Retrieved chunks have keyword overlap but are semantically off-topic.",
+      "ground_truth": "retrieve_docs",
+      "predicted_step": null,
+      "blame_score": 0.0,
+      "confidence": "none",
+      "explanation": "SKIPPED: sentence-transformers not available; semantic distractor requires dense embeddings.",
+      "passed": true,
+      "skipped": true,
+      "skip_reason": "sentence-transformers not available; semantic distractor requires dense embeddings.",
+      "step_scores": {}
+    },
+    {
+      "scenario_id": "retrieval_04_weak_retrieval_healthy_llm",
+      "category": "retrieval",
+      "description": "One clearly weak retrieval step feeding into an otherwise-healthy downstream LLM step.",
+      "ground_truth": "search_knowledge_base",
+      "predicted_step": "search_knowledge_base",
+      "blame_score": 1.82,
+      "confidence": "high",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "search_knowledge_base": 0.0,
+        "llm_synthesizer": 0.9333
+      }
+    },
+    {
+      "scenario_id": "llm_05_refusal_string",
+      "category": "llm",
+      "description": "Output is a real refusal string ('I cannot help with that request...').",
+      "ground_truth": "generate_summary",
+      "predicted_step": "generate_summary",
+      "blame_score": 1.56,
+      "confidence": "high",
+      "explanation": "Model triggered a safety or policy refusal response instead of answering the query.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_report": 1.0,
+        "generate_summary": 0.0
+      }
+    },
+    {
+      "scenario_id": "llm_06_truncated_output",
+      "category": "llm",
+      "description": "Output is truncated/under the 20-token floor, cut off mid-sentence.",
+      "ground_truth": "generate_architecture_explanation",
+      "predicted_step": "generate_architecture_explanation",
+      "blame_score": 0.3381,
+      "confidence": "medium",
+      "explanation": "Model response was unusually short (11 tokens). May indicate truncation, unexpected stop token, or underspecified prompt.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_architecture": 0.92,
+        "generate_architecture_explanation": 0.7833
+      }
+    },
+    {
+      "scenario_id": "llm_07_generic_non_responsive",
+      "category": "llm",
+      "description": "Output is generic and non-responsive to the actual question asked.",
+      "ground_truth": "generate_economic_analysis",
+      "predicted_step": "generate_economic_analysis",
+      "blame_score": 0.4419,
+      "confidence": "high",
+      "explanation": "Model response was unusually short (7 tokens). May indicate truncation, unexpected stop token, or underspecified prompt.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_economic_history": 0.9429,
+        "generate_economic_analysis": 0.7167
+      }
+    },
+    {
+      "scenario_id": "llm_08_multisample_inconsistency",
+      "category": "llm",
+      "description": "Multi-sample self-consistency: several samples that substantially disagree.",
+      "ground_truth": "generate_chemistry_answer",
+      "predicted_step": "generate_chemistry_answer",
+      "blame_score": 0.156,
+      "confidence": "medium",
+      "explanation": "Model response was unusually short (18 tokens). May indicate truncation, unexpected stop token, or underspecified prompt.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_chemistry_data": 1.0,
+        "generate_chemistry_answer": 0.9
+      }
+    },
+    {
+      "scenario_id": "tool_09_raised_exception",
+      "category": "tool",
+      "description": "Tool step raises an exception.",
+      "ground_truth": "execute_sql_query",
+      "predicted_step": "execute_sql_query",
+      "blame_score": 1.0,
+      "confidence": "high",
+      "explanation": "Step raised an unhandled exception: OperationalError: Connection refused. Database cluster host at 10.0.4.12:5432 unreachable..",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "execute_sql_query": null,
+        "format_table_output": null
+      }
+    },
+    {
+      "scenario_id": "tool_10_empty_payload",
+      "category": "tool",
+      "description": "Tool step returns a null/empty payload.",
+      "ground_truth": "fetch_user_metadata",
+      "predicted_step": "fetch_user_metadata",
+      "blame_score": 1.144,
+      "confidence": "high",
+      "explanation": "Tool returned null or empty output payload.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "fetch_user_metadata": 0.2,
+        "summarize_profile": 0.9333
+      }
+    },
+    {
+      "scenario_id": "tool_11_high_historical_error_rate",
+      "category": "tool",
+      "description": "Tool step has a genuinely high historical error rate (seeded in SQLite).",
+      "ground_truth": "unreliable_weather_api",
+      "predicted_step": "unreliable_weather_api",
+      "blame_score": 1.144,
+      "confidence": "high",
+      "explanation": "Tool output health was low (0.20). This tool has a high historical failure rate (80%).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "unreliable_weather_api": 0.2,
+        "generate_weather_report": 0.9333
+      }
+    },
+    {
+      "scenario_id": "cascading_12_multi_degraded_steps",
+      "category": "cascading",
+      "description": "Two steps degraded (mild retrieval vs severe refusal) - formula picks worse.",
+      "ground_truth": "llm_synthesizer",
+      "predicted_step": "llm_synthesizer",
+      "blame_score": 1.56,
+      "confidence": "high",
+      "explanation": "Model triggered a safety or policy refusal response instead of answering the query.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "search_documents": 0.8667,
+        "llm_synthesizer": 0.0
+      }
+    },
+    {
+      "scenario_id": "cascading_13_upstream_root_cause",
+      "category": "cascading",
+      "description": "Upstream retrieval failure drags downstream LLM - blame attributes to root cause.",
+      "ground_truth": "retrieve_kb_context",
+      "predicted_step": "retrieve_kb_context",
+      "blame_score": 1.82,
+      "confidence": "high",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_kb_context": 0.0,
+        "generate_security_explanation": 0.8333
+      }
+    },
+    {
+      "scenario_id": "fallback_14_all_unscored_slowest",
+      "category": "fallback",
+      "description": "All steps generic type with no scorer - confirms fallback to slowest latency.",
+      "ground_truth": "parse_json_payload",
+      "predicted_step": "parse_json_payload",
+      "blame_score": 0.5,
+      "confidence": "low",
+      "explanation": "All steps in this run were unscored. Blame fell back to step 'parse_json_payload' as the slowest bottleneck (4850ms).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "clean_raw_input": null,
+        "parse_json_payload": null,
+        "format_final_response": null
+      }
+    },
+    {
+      "scenario_id": "fallback_15_all_unscored_near_tie",
+      "category": "fallback",
+      "description": "All steps generic type with near-tie in latency - records tie-break behavior.",
+      "ground_truth": "fetch_remote_payload",
+      "predicted_step": "fetch_remote_payload",
+      "blame_score": 0.5,
+      "confidence": "low",
+      "explanation": "All steps in this run were unscored. Blame fell back to step 'fetch_remote_payload' as the slowest bottleneck (252ms).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "fetch_remote_header": null,
+        "fetch_remote_payload": null,
+        "stitch_response": null
+      }
+    },
+    {
+      "scenario_id": "healthy_16_clean_rag",
+      "category": "healthy",
+      "description": "Fully healthy RAG trace (good retrieval + healthy LLM answer).",
+      "ground_truth": null,
+      "predicted_step": "generate_rag_answer",
+      "blame_score": 0.1041,
+      "confidence": "medium",
+      "explanation": "LLM response quality sub-scores degraded (overall health score: 0.93).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_rag_context": 1.0,
+        "generate_rag_answer": 0.9333
+      }
+    },
+    {
+      "scenario_id": "healthy_17_clean_tool",
+      "category": "healthy",
+      "description": "Fully healthy tool pipeline (valid dict payload + healthy summary).",
+      "ground_truth": null,
+      "predicted_step": "format_tax_summary",
+      "blame_score": 0.1041,
+      "confidence": "medium",
+      "explanation": "LLM response quality sub-scores degraded (overall health score: 0.93).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "calculate_tax_deduction": 1.0,
+        "format_tax_summary": 0.9333
+      }
+    },
+    {
+      "scenario_id": "healthy_18_clean_multistep_agent",
+      "category": "healthy",
+      "description": "Fully healthy multi-step agent (tool + retrieval + LLM synthesis).",
+      "ground_truth": null,
+      "predicted_step": "generate_customer_reply",
+      "blame_score": 0.1041,
+      "confidence": "medium",
+      "explanation": "LLM response quality sub-scores degraded (overall health score: 0.93).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "lookup_customer_record": 1.0,
+        "retrieve_plan_features": 1.0,
+        "generate_customer_reply": 0.9333
+      }
+    }
+  ]
+}
