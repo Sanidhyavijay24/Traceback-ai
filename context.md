@@ -8,7 +8,7 @@
 ---
 
 ## 2. Tech Stack
-- **Language:** Python 3.10+ (tested on Python 3.14)
+- **Language:** Python 3.10+ (tested on Python 3.10, 3.11, 3.12, 3.14)
 - **Trace Persistence:** SQLite (default `~/.traceback/traces.db`, configurable via `TRACEBACK_DB_PATH`)
 - **CLI:** Click (`traceback` and `tb` entry points)
 - **Token Counting:** `tiktoken` (`cl100k_base`) with character-length fallback
@@ -59,7 +59,7 @@ traceback-ai/
 │   ├── simple_rag.py          # Standalone RAG pipeline using Google Gemini with automatic .env loading
 │   └── test_cases.json        # Evaluation test cases
 ├── .github/workflows/
-│   ├── ci.yml                 # GitHub Actions CI workflow across Python versions
+│   ├── ci.yml                 # GitHub Actions CI workflow across Python versions (3.10, 3.11, 3.12)
 │   ├── eval_gate.yml          # Pull request CI evaluation gate workflow
 │   └── publish.yml            # PyPI distribution publishing workflow
 ├── pyproject.toml             # Hatchling build configuration and entry points
@@ -81,4 +81,7 @@ traceback-ai/
 - [x] **Phase 2: Step Scorers**
 - [x] **Phase 3: Blame Algorithm**
 - [x] **Phase 4: Integrations, Packaging & CI**
-- [x] **Repository Prepared & Git Ready**: `.gitignore` configured to ignore `.env`, `*.db`, and `traceback_build_plan.md`.
+- [x] **CI Cross-Platform Compatibility Verified**:
+  - Python 3.10, 3.11, 3.12 CI matrix verified.
+  - Resolved `sentence-transformers` semantic similarity threshold for eval gate tests on CI runners.
+  - Fixed `from __future__ import annotations` and `Sequence` import in `langchain.py`.

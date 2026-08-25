@@ -184,7 +184,10 @@ def test_cli_run_eval_gate_passes(tmp_path):
 
             @trace(step_type="retrieval")
             def fetch(q: str):
-                return ["Retrieval-augmented generation (RAG) connects search to generative models."]
+                return [
+                    "Retrieval-augmented generation (RAG) connects search retrieval to generative models.",
+                    "Retrieval-augmented generation grounds LLM responses with retrieved factual context."
+                ]
 
             @trace(step_type="llm")
             def gen(prompt: str):
@@ -195,7 +198,7 @@ def test_cli_run_eval_gate_passes(tmp_path):
 
             @trace(pipeline=True)
             def run_app():
-                docs = fetch("What is RAG?")
+                docs = fetch("What is retrieval-augmented generation?")
                 return gen(docs[0])
 
             if __name__ == "__main__":
