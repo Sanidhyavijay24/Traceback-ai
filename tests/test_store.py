@@ -3,7 +3,6 @@ Tests for Traceback AI SQLite store and serialization.
 """
 
 from datetime import datetime
-import numpy as np
 import pytest
 
 from tracebackai.models import Step, Trace
@@ -76,6 +75,7 @@ def test_store_save_and_load_roundtrip(temp_store):
 
 def test_store_complex_serialization(temp_store):
     """Verify serialization of numpy arrays, datetimes, and large string truncation."""
+    np = pytest.importorskip("numpy")
     now = datetime(2026, 8, 25, 4, 0, 0)
     arr = np.array([1.0, 2.5, 3.8])
     huge_str = "a" * (MAX_STRING_LENGTH + 500)

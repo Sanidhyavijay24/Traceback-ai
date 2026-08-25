@@ -15,6 +15,7 @@ pip install traceback-ai
 
 # Optional extras:
 pip install "traceback-ai[semantic]"    # Sentence-transformers semantic embeddings
+pip install "traceback-ai[gemini]"      # Google Gemini SDK instrumentation
 pip install "traceback-ai[anthropic]"   # Anthropic SDK instrumentation
 pip install "traceback-ai[openai]"      # OpenAI SDK instrumentation
 pip install "traceback-ai[langchain]"   # LangChain callbacks
@@ -158,6 +159,7 @@ jobs:
 
 | Integration | Usage | Traced Metrics |
 |-------------|-------|----------------|
+| **Google Gemini** | `from tracebackai.integrations.gemini import TracedGemini` | `model`, `input_tokens`, `output_tokens`, `latency_ms` |
 | **Anthropic** | `from tracebackai.integrations.anthropic import TracedAnthropic, patch_anthropic` | `model`, `input_tokens`, `output_tokens`, `stop_reason` |
 | **OpenAI** | `from tracebackai.integrations.openai import TracedOpenAI, patch_openai` | `model`, `input_tokens`, `output_tokens`, `finish_reason` |
 | **LangChain** | `from tracebackai.integrations.langchain import TracebackCallbackHandler` | `on_llm_*`, `on_retriever_*`, `on_tool_*` |

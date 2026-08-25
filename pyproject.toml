@@ -22,11 +22,12 @@ dependencies = [
 
 [project.optional-dependencies]
 semantic = ["sentence-transformers>=2.2"]
+gemini = ["google-genai>=0.1.0"]
 anthropic = ["anthropic>=0.20"]
 openai = ["openai>=1.0"]
 langchain = ["langchain>=0.1"]
-dev = ["pytest", "pytest-cov", "ruff", "black", "build", "twine"]
-all = ["traceback-ai[semantic,anthropic,openai,langchain]"]
+dev = ["pytest", "pytest-cov", "ruff", "black", "build", "twine", "numpy>=1.24.0"]
+all = ["traceback-ai[semantic,gemini,anthropic,openai,langchain]"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tracebackai"]

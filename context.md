@@ -47,7 +47,7 @@ traceback-ai/
 │           └── langchain.py   # TracebackCallbackHandler
 ├── tests/
 │   ├── test_models.py         # Model dataclass tests
-│   ├── test_store.py          # SQLite round-trip and serialization tests
+│   ├── test_store.py          # SQLite round-trip and serialization tests (resilient numpy test)
 │   ├── test_tracer.py         # @trace, TraceContext, nesting, and error handling tests
 │   ├── test_token_utils.py    # Token counter and fallback tests
 │   ├── test_scorers.py        # Unit & integration tests for all step scorers and pre-save scoring
@@ -62,7 +62,7 @@ traceback-ai/
 │   ├── ci.yml                 # GitHub Actions CI workflow across Python versions (3.10, 3.11, 3.12)
 │   ├── eval_gate.yml          # Pull request CI evaluation gate workflow
 │   └── publish.yml            # PyPI distribution publishing workflow
-├── pyproject.toml             # Hatchling build configuration and entry points
+├── pyproject.toml             # Hatchling build configuration and entry points (with dev numpy and gemini extras)
 ├── requirements.txt           # Project dependencies
 ├── .env.example               # Environment variables example template
 ├── .env                       # Local environment file (gitignored)
@@ -70,7 +70,7 @@ traceback-ai/
 ├── LICENSE                    # MIT License
 ├── DECISIONS.md               # Technical decisions and tradeoffs log
 ├── CONTRIBUTING.md            # Open-source contribution guidelines
-├── README.md                  # Comprehensive developer documentation
+├── README.md                  # Comprehensive developer documentation (with Gemini docs and install extras)
 └── context.md                 # Single source of truth ledger
 ```
 
@@ -81,7 +81,8 @@ traceback-ai/
 - [x] **Phase 2: Step Scorers**
 - [x] **Phase 3: Blame Algorithm**
 - [x] **Phase 4: Integrations, Packaging & CI**
-- [x] **CI Cross-Platform Compatibility Verified**:
-  - Python 3.10, 3.11, 3.12 CI matrix verified.
-  - Resolved `sentence-transformers` semantic similarity threshold for eval gate tests on CI runners.
-  - Fixed `from __future__ import annotations` and `Sequence` import in `langchain.py`.
+- [x] **CI & Dependencies Verified**:
+  - `numpy>=1.24.0` added to `dev` in `pyproject.toml` and `requirements.txt`.
+  - `tests/test_store.py` safeguarded with `pytest.importorskip("numpy")`.
+  - `gemini = ["google-genai>=0.1.0"]` extra added to `pyproject.toml` and included in `all`.
+  - `README.md` updated with `traceback-ai[gemini]` install and SDK integrations table entry.
