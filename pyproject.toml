@@ -39,3 +39,7 @@ tb = "tracebackai.cli:cli"
 [project.urls]
 Homepage = "https://github.com/Sanidhyavijay24/traceback-ai"
 Issues = "https://github.com/Sanidhyavijay24/traceback-ai/issues"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]

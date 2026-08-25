@@ -1,11 +1,11 @@
-"""
-Pytest integration for Blame Accuracy Benchmark.
-
-Ensures that failure attribution accuracy and false-positive rates
-do not regress in future changes or in CI.
-"""
-
+from pathlib import Path
+import sys
 import pytest
+
+# Ensure repository root is on sys.path
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from benchmarks.blame_accuracy import HEALTHY_BLAME_THRESHOLD, run_benchmark
 
