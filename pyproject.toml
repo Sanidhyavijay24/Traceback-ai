@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "traceback-ai"
+name = "agent-blame"
 version = "0.1.0"
 description = "LLM agent execution tracer with failure attribution"
 readme = "README.md"
@@ -27,7 +27,7 @@ anthropic = ["anthropic>=0.20"]
 openai = ["openai>=1.0"]
 langchain = ["langchain>=0.1"]
 dev = ["pytest", "pytest-cov", "ruff", "black", "build", "twine", "numpy>=1.24.0"]
-all = ["traceback-ai[semantic,gemini,anthropic,openai,langchain]"]
+all = ["agent-blame[semantic,gemini,anthropic,openai,langchain]"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tracebackai"]

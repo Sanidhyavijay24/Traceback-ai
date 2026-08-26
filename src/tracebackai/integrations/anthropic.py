@@ -84,7 +84,7 @@ def _wrap_messages_create(original_create: Any) -> Any:
 def patch_anthropic() -> None:
     """Monkeypatch the Anthropic SDK to automatically trace all messages.create calls."""
     if not _ANTHROPIC_AVAILABLE:
-        raise ImportError("anthropic package is not installed. Install with: pip install traceback-ai[anthropic]")
+        raise ImportError("anthropic package is not installed. Install with: pip install agent-blame[anthropic]")
 
     import anthropic.resources.messages
     if not getattr(anthropic.resources.messages.Messages.create, "_is_traced", False):
@@ -99,6 +99,6 @@ class TracedAnthropic(Anthropic if _ANTHROPIC_AVAILABLE else object):  # type: i
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if not _ANTHROPIC_AVAILABLE:
-            raise ImportError("anthropic package is not installed. Install with: pip install traceback-ai[anthropic]")
+            raise ImportError("anthropic package is not installed. Install with: pip install agent-blame[anthropic]")
         super().__init__(*args, **kwargs)
         self.messages.create = _wrap_messages_create(self.messages.create)

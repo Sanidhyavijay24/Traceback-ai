@@ -86,7 +86,7 @@ def _wrap_completions_create(original_create: Any) -> Any:
 def patch_openai() -> None:
     """Monkeypatch the OpenAI SDK to automatically trace all chat.completions.create calls."""
     if not _OPENAI_AVAILABLE:
-        raise ImportError("openai package is not installed. Install with: pip install traceback-ai[openai]")
+        raise ImportError("openai package is not installed. Install with: pip install agent-blame[openai]")
 
     import openai.resources.chat.completions
     if not getattr(openai.resources.chat.completions.Completions.create, "_is_traced", False):
@@ -101,6 +101,6 @@ class TracedOpenAI(OpenAI if _OPENAI_AVAILABLE else object):  # type: ignore
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         if not _OPENAI_AVAILABLE:
-            raise ImportError("openai package is not installed. Install with: pip install traceback-ai[openai]")
+            raise ImportError("openai package is not installed. Install with: pip install agent-blame[openai]")
         super().__init__(*args, **kwargs)
         self.chat.completions.create = _wrap_completions_create(self.chat.completions.create)

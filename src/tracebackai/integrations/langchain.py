@@ -27,7 +27,7 @@ class TracebackCallbackHandler(BaseCallbackHandler if _LANGCHAIN_AVAILABLE else 
 
     def __init__(self) -> None:
         if not _LANGCHAIN_AVAILABLE:
-            raise ImportError("langchain package is not installed. Install with: pip install traceback-ai[langchain]")
+            raise ImportError("langchain package is not installed. Install with: pip install agent-blame[langchain]")
         super().__init__()
         self._active_steps: dict[str, Step] = {}
 

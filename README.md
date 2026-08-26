@@ -11,15 +11,15 @@ Your LLM agent failed. The final answer was hallucinated, truncated, or incomple
 ## 📦 Installation
 
 ```bash
-pip install traceback-ai
+pip install agent-blame
 
 # Optional extras:
-pip install "traceback-ai[semantic]"    # Sentence-transformers semantic embeddings
-pip install "traceback-ai[gemini]"      # Google Gemini SDK instrumentation
-pip install "traceback-ai[anthropic]"   # Anthropic SDK instrumentation
-pip install "traceback-ai[openai]"      # OpenAI SDK instrumentation
-pip install "traceback-ai[langchain]"   # LangChain callbacks
-pip install "traceback-ai[all]"         # All integrations & extras
+pip install "agent-blame[semantic]"    # Sentence-transformers semantic embeddings
+pip install "agent-blame[gemini]"      # Google Gemini SDK instrumentation
+pip install "agent-blame[anthropic]"   # Anthropic SDK instrumentation
+pip install "agent-blame[openai]"      # OpenAI SDK instrumentation
+pip install "agent-blame[langchain]"   # LangChain callbacks
+pip install "agent-blame[all]"         # All integrations & extras
 ```
 
 ---

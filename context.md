@@ -1,7 +1,7 @@
 # Traceback AI — Context & Single Source of Truth
 
 ## 1. Project Overview
-- **Name:** `traceback-ai` (`tracebackai`)
+- **Name:** `agent-blame` (PyPI) / `tracebackai` (Python import & CLI `traceback`/`tb`)
 - **Description:** LLM Agent Execution Tracer with Failure Attribution ("strace for LLM agents").
 - **Mission:** Instrument any LLM/agent pipeline, record structured execution traces in SQLite, score steps, and attribute root cause failure to the most likely causative step.
 

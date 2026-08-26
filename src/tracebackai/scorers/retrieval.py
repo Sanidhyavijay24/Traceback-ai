@@ -43,7 +43,7 @@ def _get_sentence_transformer() -> Any:
             if not _WARNED_FALLBACK:
                 logger.warning(
                     "sentence-transformers not available or failed to load. "
-                    "Falling back to BM25 term overlap. Install with: pip install traceback-ai[semantic]"
+                    "Falling back to BM25 term overlap. Install with: pip install agent-blame[semantic]"
                 )
                 _WARNED_FALLBACK = True
             return None
