@@ -1,0 +1,1178 @@
+/**
+ * Traceback AI - Mission Control Design System
+ * Monochrome base with single-meaning phosphor amber accent for fault attribution.
+ */
+
+:root {
+  /* Core Palette */
+  --bg: #0B0A08;
+  --surface: #131210;
+  --surface-subtle: #1A1916;
+  --surface-hover: #22201C;
+  --surface-active: #292723;
+  --line: #2A2823;
+  --line-strong: #3D3A34;
+  --line-focus: #524E46;
+
+  /* Typography Colors */
+  --text-primary: #E8E4DC;
+  --text-muted: #8A8579;
+  --text-dim: #5C584E;
+
+  /* Single-Meaning Fault Accent (Restrained Phosphor Amber) */
+  --accent-fault: #D9863D;
+  --accent-fault-bg: rgba(217, 134, 61, 0.07);
+  --accent-fault-line: rgba(217, 134, 61, 0.45);
+
+  /* Fonts */
+  --font-display: 'Michroma', sans-serif;
+  --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
+}
+
+/* Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility Monospace */
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Keyboard Focus States */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 1px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+/* Base Shell */
+.mission-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+
+/* Top Header */
+.instrument-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 20px;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.brand-prefix {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  font-weight: 400;
+}
+
+.brand-sub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+/* Telemetry Pills */
+.header-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg);
+  padding: 4px 16px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.telemetry-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.telemetry-label {
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.telemetry-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.telemetry-divider {
+  width: 1px;
+  height: 14px;
+  background-color: var(--line);
+}
+
+/* Navigation Buttons */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.nav-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-subtle);
+  border-color: var(--line);
+}
+
+.nav-btn.active {
+  color: var(--text-primary);
+  background-color: var(--surface-subtle);
+  border-color: var(--line-strong);
+}
+
+.nav-btn.icon-only {
+  padding: 6px 10px;
+}
+
+/* Main Deck */
+.mission-deck {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.view-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Controls Bar */
+.control-deck, .diff-control-deck {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  padding: 14px 18px;
+  border-radius: 2px;
+  flex-wrap: wrap;
+}
+
+.control-group, .diff-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-group {
+  flex: 1;
+  min-width: 260px;
+}
+
+.control-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.control-input, .control-select {
+  background-color: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 7px 10px;
+  border-radius: 2px;
+  outline: none;
+  min-height: 32px;
+}
+
+.control-input:focus, .control-select:focus {
+  border-color: var(--line-focus);
+}
+
+.control-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  min-height: 32px;
+  border: 1px solid var(--line-strong);
+  transition: all 0.15s ease;
+}
+
+.btn-secondary {
+  background-color: var(--surface-subtle);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--line-focus);
+}
+
+.btn-primary {
+  background-color: var(--text-primary);
+  color: var(--bg);
+  border-color: var(--text-primary);
+}
+
+.btn-primary:hover {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+.btn-subtle {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.btn-subtle:hover {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+  background-color: var(--surface-subtle);
+}
+
+.btn-subtle.active {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+  background-color: var(--surface-subtle);
+}
+
+.btn-copy {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.btn-copy:hover {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+}
+
+/* Tables */
+.table-container {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow-x: auto;
+}
+
+.telemetry-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.telemetry-table thead {
+  background-color: var(--surface-subtle);
+  border-bottom: 1px solid var(--line);
+}
+
+.telemetry-table th {
+  padding: 10px 14px;
+  color: var(--text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.telemetry-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-primary);
+}
+
+.telemetry-table tbody tr {
+  transition: background-color 0.1s ease;
+  cursor: pointer;
+}
+
+.telemetry-table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.telemetry-table tbody tr.row-selected {
+  background-color: var(--surface-active);
+}
+
+/* Status Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  border-radius: 2px;
+  border: 1px solid var(--line);
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.status-pill.status-healthy {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+}
+
+/* Accent ONLY applied to Fault / Error status */
+.status-pill.status-fault,
+.status-pill.status-error {
+  color: var(--accent-fault);
+  border-color: var(--accent-fault-line);
+  background: var(--accent-fault-bg);
+}
+
+.status-pill.status-fault .status-dot,
+.status-pill.status-error .status-dot {
+  background-color: var(--accent-fault);
+}
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+/* Action link buttons in table */
+.action-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.70rem;
+  letter-spacing: 0.06em;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  margin-right: 4px;
+  background: var(--bg);
+  display: inline-block;
+}
+
+.action-link:hover {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+}
+
+/* Zero State */
+.zero-state-panel {
+  background-color: var(--surface);
+  border: 1px dashed var(--line-strong);
+  padding: 48px 32px;
+  text-align: center;
+  border-radius: 2px;
+  margin: 20px 0;
+}
+
+.zero-state-glyph {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.zero-state-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.zero-state-desc {
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 20px auto;
+  font-size: 0.84rem;
+}
+
+.zero-state-codebox {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  max-width: 680px;
+  margin: 0 auto 16px auto;
+  text-align: left;
+}
+
+.codebox-header {
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+
+.zero-state-codebox pre {
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  overflow-x: auto;
+}
+
+.zero-state-cli-hint {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.zero-state-cli-hint code {
+  color: var(--text-primary);
+  background: var(--surface-subtle);
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   VIEW 2 & 3: TRACE DETAIL & BLAME (FLIGHT-PATH STRIP)
+   ========================================================================== */
+
+.trace-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  padding: 16px 20px;
+  border-radius: 2px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.banner-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+}
+
+.breadcrumb-link {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.breadcrumb-link:hover {
+  color: var(--text-primary);
+}
+
+.breadcrumb-sep {
+  color: var(--text-dim);
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.trace-banner-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.trace-banner-metrics {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.banner-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Split Layout */
+.trace-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .trace-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Flight Path Strip Column */
+.flight-strip-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.strip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  padding: 12px 18px;
+  border-radius: 2px;
+}
+
+.strip-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strip-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.strip-title {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+}
+
+.strip-view-controls {
+  display: flex;
+  gap: 6px;
+}
+
+/* Signature Timeline Container */
+.flight-strip-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding: 8px 0;
+}
+
+/* Node Container */
+.timeline-node-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Connecting Connector Line */
+.timeline-connector {
+  position: absolute;
+  left: 31px;
+  top: -14px;
+  bottom: 50%;
+  width: 2px;
+  background-color: var(--line-strong);
+  z-index: 1;
+}
+
+/* Signal Loss / Dashed Line on Fault */
+.timeline-node-wrapper.has-fault-preceding .timeline-connector,
+.timeline-node-wrapper.is-fault-step .timeline-connector {
+  border-left: 2px dashed var(--accent-fault);
+  background-color: transparent;
+  width: 0;
+}
+
+/* Node Main Card */
+.timeline-node-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  padding: 12px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: all 0.15s ease;
+  margin-bottom: 12px;
+}
+
+.timeline-node-card:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--line-strong);
+}
+
+.timeline-node-card.selected {
+  border-color: var(--text-primary);
+  background-color: var(--surface-active);
+}
+
+/* Step Node Marker */
+.node-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.node-info-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.node-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.node-name {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-type-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 1px 5px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.node-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: var(--text-muted);
+}
+
+.node-telemetry-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-score-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.score-indicator {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   FAULT / BLAME ANOMALY STYLING (THE ONE ACCENT USE)
+   ========================================================================== */
+
+.timeline-node-wrapper.is-fault-step .timeline-node-card {
+  border-color: var(--accent-fault-line);
+  background-color: var(--accent-fault-bg);
+}
+
+.timeline-node-wrapper.is-fault-step .node-marker {
+  background-color: var(--accent-fault);
+  color: var(--bg);
+  border-color: var(--accent-fault);
+}
+
+.timeline-node-wrapper.is-fault-step .node-name {
+  color: var(--accent-fault);
+}
+
+.timeline-node-wrapper.is-fault-step .score-indicator {
+  color: var(--accent-fault);
+}
+
+/* Fault Report Diagnostic Annotation Breakoff Panel */
+.fault-report-annotation {
+  background: var(--surface);
+  border: 1px solid var(--accent-fault-line);
+  border-left: 4px solid var(--accent-fault);
+  border-radius: 2px;
+  padding: 14px 18px;
+  margin: -4px 0 16px 46px;
+  position: relative;
+  z-index: 3;
+}
+
+.fault-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fault-report-tag {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--accent-fault);
+}
+
+.fault-report-conf {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  border: 1px solid var(--line-strong);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.fault-report-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fault-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.fault-score-val {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--accent-fault);
+  font-weight: 600;
+}
+
+.fault-explanation {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.fault-coblame-row {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-top: 4px;
+}
+
+/* Final Output Box */
+.final-output-box {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background-color: var(--surface-subtle);
+  border-bottom: 1px solid var(--line);
+}
+
+.output-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.output-content {
+  padding: 12px 14px;
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   TELEMETRY INSPECTOR SIDE PANEL
+   ========================================================================== */
+
+.telemetry-inspector {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+}
+
+.inspector-header {
+  padding: 14px 16px;
+  background-color: var(--surface-subtle);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspector-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.inspector-title {
+  font-family: var(--font-display);
+  font-size: 0.90rem;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.inspector-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.inspector-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inspector-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric-cell {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-cell-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.metric-cell-val {
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.section-label.fault-label {
+  color: var(--accent-fault);
+}
+
+.payload-box {
+  background-color: var(--bg);
+  border: 1px solid var(--line);
+  padding: 10px;
+  border-radius: 2px;
+  font-size: 0.74rem;
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+}
+
+.fault-box-pre {
+  background-color: var(--accent-fault-bg);
+  border: 1px solid var(--accent-fault-line);
+  padding: 10px;
+  border-radius: 2px;
+  font-size: 0.74rem;
+  color: var(--accent-fault);
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   VIEW 4: DIFF COMPARISON
+   ========================================================================== */
+
+.diff-picker-arrow {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  padding: 0 4px;
+  align-self: center;
+}
+
+.diff-verdict-deck {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  padding: 18px 22px;
+  border-radius: 2px;
+}
+
+.verdict-tag {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.verdict-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.verdict-explanation {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Diff Regressed Verdict Accent */
+.verdict-banner.verdict-regression .verdict-title {
+  color: var(--accent-fault);
+}
+
+.verdict-banner.verdict-regression {
+  border-left: 4px solid var(--accent-fault);
+  padding-left: 12px;
+}
+
+/* Diff Table Rows */
+.diff-row-regressed td {
+  background-color: var(--accent-fault-bg);
+  color: var(--accent-fault);
+}
+
+.diff-row-regressed .col-delta,
+.diff-row-regressed .col-diff-status {
+  color: var(--accent-fault);
+  font-weight: 600;
+}
+
+.diff-tag-regressed {
+  color: var(--accent-fault);
+  border: 1px dashed var(--accent-fault);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.68rem;
+}
+
+.diff-tag-improved {
+  color: var(--text-primary);
+  border: 1px solid var(--line-strong);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.68rem;
+}
+
+.diff-tag-stable {
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.68rem;
+}
+
+/* Toast Notice */
+.toast-notice {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: var(--surface-active);
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  padding: 10px 18px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  border-radius: 2px;
+  z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}

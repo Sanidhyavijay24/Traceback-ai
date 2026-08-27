@@ -108,16 +108,24 @@ def show_cmd(run_id: str, verbose: bool) -> None:
         # Score formatting
         score_str = ""
         if step.score is not None:
-            if step.score >= 0.75:
-                score_str = click.style(f"score={step.score:.2f} [OK]", fg="green")
-            elif step.score >= 0.50:
-                if step.step_type == "retrieval" and step.score < 0.55:
-                    score_str = click.style(f"score={step.score:.2f} [!] WEAK RETRIEVAL", fg="yellow")
+            if step.step_type == "retrieval":
+                from tracebackai.scorers.retrieval import get_retrieval_threshold
+                r_thresh = get_retrieval_threshold(step)
+                if step.score < r_thresh:
+                    if step.score < 0.50:
+                        score_str = click.style(f"score={step.score:.2f} [FAIL] WEAK RETRIEVAL", fg="red")
+                    else:
+                        score_str = click.style(f"score={step.score:.2f} [!] WEAK RETRIEVAL", fg="yellow")
                 else:
-                    score_str = click.style(f"score={step.score:.2f} [!]", fg="yellow")
+                    if step.score >= 0.75:
+                        score_str = click.style(f"score={step.score:.2f} [OK]", fg="green")
+                    else:
+                        score_str = click.style(f"score={step.score:.2f} [OK]", fg="green")
             else:
-                if step.step_type == "retrieval":
-                    score_str = click.style(f"score={step.score:.2f} [FAIL] WEAK RETRIEVAL", fg="red")
+                if step.score >= 0.75:
+                    score_str = click.style(f"score={step.score:.2f} [OK]", fg="green")
+                elif step.score >= 0.50:
+                    score_str = click.style(f"score={step.score:.2f} [!]", fg="yellow")
                 else:
                     score_str = click.style(f"score={step.score:.2f} [FAIL]", fg="red")
 
@@ -149,7 +157,7 @@ def show_cmd(run_id: str, verbose: bool) -> None:
 def blame_cmd(run_id: str) -> None:
     """Identify the single most likely failure-causative step in a run."""
     from tracebackai.blame import blame_run
-    from tracebackai.scorers.retrieval import WEAK_RETRIEVAL_THRESHOLD
+    from tracebackai.scorers.retrieval import get_retrieval_threshold
 
     store = Store()
     try:
@@ -170,7 +178,7 @@ def blame_cmd(run_id: str) -> None:
     pstep = result.primary_step
     p_num = pstep.index
     score_display = f"{pstep.score:.2f}" if pstep.score is not None else "N/A (unscored)"
-    threshold_info = f"  (threshold: {WEAK_RETRIEVAL_THRESHOLD:.2f})" if pstep.step_type == "retrieval" else ""
+    threshold_info = f"  (threshold: {get_retrieval_threshold(pstep):.2f})" if pstep.step_type == "retrieval" else ""
 
     if result.is_fallback_latency:
         click.secho(f"[!] BLAME (Latency Fallback): Step [{p_num}] {pstep.name} ({pstep.step_type})", fg="yellow", bold=True)
@@ -332,6 +340,18 @@ def run_cmd(script: str, input_path: Optional[str], fail_on_blame: Optional[floa
                 fg="green",
                 bold=True,
             )
+
+
+@cli.command(name="serve")
+@click.option("--port", "-p", default=7788, type=int, help="Port to bind server to (default: 7788).")
+@click.option("--host", "-h", default="127.0.0.1", help="Host address to bind to (default: 127.0.0.1).")
+@click.option("--no-browser", is_flag=True, help="Do not automatically open browser.")
+@click.option("--db-path", default=None, help="Path to SQLite database.")
+def serve_cmd(port: int, host: str, no_browser: bool, db_path: Optional[str]) -> None:
+    """Launch local mission-control web dashboard."""
+    from tracebackai.dashboard.server import start_server
+
+    start_server(host=host, port=port, open_browser=not no_browser, db_path=db_path, blocking=True)
 
 
 if __name__ == "__main__":

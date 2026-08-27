@@ -101,6 +101,81 @@ def test_retrieval_bm25_similarity():
     assert bm25_val > 0.6
 
 
+def test_stem_singular_plural_pairs():
+    """Verify _stem normalizes singular and plural pairs to identical base stems."""
+    from tracebackai.scorers.retrieval import _stem
+
+    pairs = [
+        ("database", "databases"),
+        ("phase", "phases"),
+        ("cache", "caches"),
+        ("service", "services"),
+        ("strategy", "strategies"),
+        ("query", "queries"),
+        ("index", "indexes"),
+        ("table", "tables"),
+        ("clause", "clauses"),
+        ("device", "devices"),
+    ]
+    for singular, plural in pairs:
+        stem_sing = _stem(singular)
+        stem_plur = _stem(plural)
+        assert stem_sing == stem_plur, (
+            f"Stem mismatch for pair ({singular}, {plural}): '{stem_sing}' != '{stem_plur}'"
+        )
+
+
+def test_retrieval_bm25_database_indexing_repro():
+    """
+    Verify concrete repro query 'How do database indexing strategies work?' scores above
+    BM25 threshold and is not marked as weak retrieval under the BM25 fallback path.
+    """
+    from tracebackai.scorers.retrieval import BM25_RETRIEVAL_THRESHOLD
+
+    scorer = RetrievalScorer(force_method="bm25_fallback")
+    query = "How do database indexing strategies work?"
+    chunks = [
+        "B-tree indexes are the default index type in most relational databases.",
+        "A B-tree index speeds up lookups, range queries, and sorted retrieval.",
+        "Composite indexes cover queries filtering on multiple columns together.",
+    ]
+    step = Step(step_type="retrieval", input=query, output=chunks)
+    score = scorer.score(step)
+
+    assert step.metadata["retrieval_score_method"] == "bm25_fallback"
+    assert score >= BM25_RETRIEVAL_THRESHOLD, (
+        f"BM25 retrieval score {score} fell below BM25 threshold {BM25_RETRIEVAL_THRESHOLD}"
+    )
+
+
+def test_get_retrieval_threshold():
+    """Verify get_retrieval_threshold returns method-specific thresholds."""
+    from tracebackai.scorers.retrieval import (
+        BM25_RETRIEVAL_THRESHOLD,
+        SEMANTIC_RETRIEVAL_THRESHOLD,
+        get_retrieval_threshold,
+    )
+
+    bm25_step = Step(
+        step_type="retrieval",
+        input="q",
+        output=["c"],
+        metadata={"retrieval_score_method": "bm25_fallback"},
+    )
+    semantic_step = Step(
+        step_type="retrieval",
+        input="q",
+        output=["c"],
+        metadata={"retrieval_score_method": "sentence_transformers"},
+    )
+
+    assert get_retrieval_threshold(bm25_step) == BM25_RETRIEVAL_THRESHOLD
+    assert get_retrieval_threshold("bm25_fallback") == BM25_RETRIEVAL_THRESHOLD
+    assert get_retrieval_threshold(semantic_step) == SEMANTIC_RETRIEVAL_THRESHOLD
+    assert get_retrieval_threshold("sentence_transformers") == SEMANTIC_RETRIEVAL_THRESHOLD
+    assert get_retrieval_threshold(None) == SEMANTIC_RETRIEVAL_THRESHOLD
+
+
 # ---------------------------------------------------------------------------
 # LLM Scorer Tests
 # ---------------------------------------------------------------------------

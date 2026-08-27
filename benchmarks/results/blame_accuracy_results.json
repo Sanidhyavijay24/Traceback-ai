@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-08-25 03:15:00 UTC",
-  "total_scenarios": 18,
+  "timestamp": "2026-08-27 15:17:32 UTC",
+  "total_scenarios": 19,
   "failure_scenarios_evaluated": 14,
   "failure_scenarios_passed": 14,
   "top1_accuracy": 1.0,
   "top1_accuracy_pct": "100.0%",
-  "healthy_scenarios_evaluated": 3,
+  "healthy_scenarios_evaluated": 4,
   "healthy_false_positives": 0,
   "false_positive_rate": 0.0,
   "false_positive_rate_pct": "0.0%",
@@ -36,7 +36,7 @@
       "accuracy": 1.0
     }
   },
-  "elapsed_seconds": 0.15,
+  "elapsed_seconds": 0.14,
   "results": [
     {
       "scenario_id": "retrieval_01_unrelated_chunks",
@@ -46,7 +46,7 @@
       "predicted_step": "retrieve_docs",
       "blame_score": 1.82,
       "confidence": "high",
-      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.33). Downstream steps were starved of relevant context.",
       "passed": true,
       "skipped": false,
       "skip_reason": null,
@@ -94,7 +94,7 @@
       "predicted_step": "search_knowledge_base",
       "blame_score": 1.82,
       "confidence": "high",
-      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.33). Downstream steps were starved of relevant context.",
       "passed": true,
       "skipped": false,
       "skip_reason": null,
@@ -127,13 +127,13 @@
       "ground_truth": "generate_architecture_explanation",
       "predicted_step": "generate_architecture_explanation",
       "blame_score": 0.3381,
-      "confidence": "medium",
+      "confidence": "high",
       "explanation": "Model response was unusually short (11 tokens). May indicate truncation, unexpected stop token, or underspecified prompt.",
       "passed": true,
       "skipped": false,
       "skip_reason": null,
       "step_scores": {
-        "retrieve_architecture": 0.92,
+        "retrieve_architecture": 1.0,
         "generate_architecture_explanation": 0.7833
       }
     },
@@ -150,7 +150,7 @@
       "skipped": false,
       "skip_reason": null,
       "step_scores": {
-        "retrieve_economic_history": 0.9429,
+        "retrieve_economic_history": 1.0,
         "generate_economic_analysis": 0.7167
       }
     },
@@ -235,7 +235,7 @@
       "skipped": false,
       "skip_reason": null,
       "step_scores": {
-        "search_documents": 0.8667,
+        "search_documents": 1.0,
         "llm_synthesizer": 0.0
       }
     },
@@ -247,7 +247,7 @@
       "predicted_step": "retrieve_kb_context",
       "blame_score": 1.82,
       "confidence": "high",
-      "explanation": "Retrieved passages had low query similarity (0.00 < 0.55). Downstream steps were starved of relevant context.",
+      "explanation": "Retrieved passages had low query similarity (0.00 < 0.33). Downstream steps were starved of relevant context.",
       "passed": true,
       "skipped": false,
       "skip_reason": null,
@@ -342,6 +342,23 @@
         "lookup_customer_record": 1.0,
         "retrieve_plan_features": 1.0,
         "generate_customer_reply": 0.9333
+      }
+    },
+    {
+      "scenario_id": "healthy_19_conversational_bm25_query",
+      "category": "healthy",
+      "description": "Topically on-topic database indexing query scored under BM25 fallback specifically.",
+      "ground_truth": null,
+      "predicted_step": "retrieve_db_indexing_docs",
+      "blame_score": 0.2069,
+      "confidence": "medium",
+      "explanation": "Retrieval relevance was healthy (score: 0.89 >= threshold 0.33).",
+      "passed": true,
+      "skipped": false,
+      "skip_reason": null,
+      "step_scores": {
+        "retrieve_db_indexing_docs": 0.8863,
+        "generate_indexing_explanation": 0.9333
       }
     }
   ]

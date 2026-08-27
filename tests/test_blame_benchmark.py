@@ -33,7 +33,7 @@ def test_blame_attribution_accuracy_benchmark():
     healthy_fps = summary["healthy_false_positives"]
     healthy_total = summary["healthy_scenarios_evaluated"]
 
-    assert healthy_total == 3, f"Expected 3 healthy scenarios, got {healthy_total}"
+    assert healthy_total >= 3, f"Expected at least 3 healthy scenarios, got {healthy_total}"
     assert healthy_fps <= 1, (
         f"Too many false positives on healthy traces: {healthy_fps}/{healthy_total} "
         f"exceeded threshold {HEALTHY_BLAME_THRESHOLD}"

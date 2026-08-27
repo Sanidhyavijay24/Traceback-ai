@@ -17,7 +17,7 @@
 - **Environment:** Configured via `.env` (supports `GEMINI_API_KEY`, `GOOGLE_API_KEY`)
 - **Packaging:** `hatchling` / `pyproject.toml`
 - **Testing:** `pytest`, `pytest-cov`
-- **Benchmarking:** 18-scenario end-to-end evaluation suite (`benchmarks/blame_accuracy.py`)
+- **Benchmarking:** 19-scenario end-to-end evaluation suite (`benchmarks/blame_accuracy.py`) with calibrated method-specific thresholds (`SEMANTIC_RETRIEVAL_THRESHOLD = 0.55`, `BM25_RETRIEVAL_THRESHOLD = 0.33`)
 
 ---
 
@@ -39,7 +39,11 @@ traceback-ai/
 │       │   ├── llm.py         # LLMScorer (absolute-floor completeness, refusal detection, multi-sample consistency)
 │       │   └── tool.py        # ToolScorer (type verification, emptiness checks, historical error rate penalty)
 │       ├── blame.py           # Blame attribution & cross-run diffing (heuristic weighting, co-blame, explanations)
-│       ├── cli.py             # Click CLI commands: list, show, blame, diff, run
+│       ├── cli.py             # Click CLI commands: list, show, blame, diff, run, serve
+│       ├── dashboard/         # Mission Control local web dashboard
+│       │   ├── __init__.py    # Dashboard server exports
+│       │   ├── server.py      # Threading HTTP server & REST telemetry API
+│       │   └── static/        # Mission Control frontend (index.html, styles.css, app.js)
 │       └── integrations/      # Thin SDK wrappers: Gemini, Anthropic, OpenAI, LangChain
 │           ├── __init__.py    # Lazy exports for optional integrations
 │           ├── gemini.py      # TracedGemini wrapper supporting google-genai and google.generativeai
@@ -61,7 +65,8 @@ traceback-ai/
 │   ├── test_blame_benchmark.py# Pytest wrapper enforcing >=80% accuracy and <=1 false positive
 │   ├── test_integrations.py   # SDK integration mocks (Gemini, Anthropic, OpenAI, LangChain) and CLI run eval gate tests
 │   ├── test_examples.py       # Zero-secret demo execution tests
-│   └── test_cli.py            # Click CLI runner tests for list, show, blame, diff
+│   ├── test_cli.py            # Click CLI runner tests for list, show, blame, diff, serve
+│   └── test_server.py         # Mission Control HTTP server and REST API tests
 ├── examples/
 │   ├── simple_rag.py          # Standalone RAG pipeline using Google Gemini with automatic .env loading
 │   └── test_cases.json        # Evaluation test cases
@@ -88,8 +93,14 @@ traceback-ai/
 - [x] **Phase 2: Step Scorers**
 - [x] **Phase 3: Blame Algorithm**
 - [x] **Phase 4: Integrations, Packaging & CI**
+- [x] **Phase 5: Local Mission Control Web Dashboard (`traceback serve` / `tb serve`)**:
+  - Mission control aesthetic: monochrome palette (`#0B0A08`, `#131210`, `#E8E4DC`) + single phosphor amber accent (`#D9863D`) reserved strictly for blamed/faulted steps.
+  - Typography: `Michroma` (Display/header), `IBM Plex Sans` (UI Body), `IBM Plex Mono` (Telemetry & Code).
+  - Signature element: Flight-path strip sequence with dashed signal-loss line, fault node, and breakout diagnostic fault report.
+  - 4 core views: Flight Log list, Trace Detail & Step Inspector, Blame Fault Attribution, Trajectory Diff comparison.
+  - Lightweight stdlib `ThreadingHTTPServer` reading directly from SQLite Store (`Store`).
 - [x] **Blame Accuracy Benchmark Suite**:
   - 18 end-to-end scenarios spanning retrieval, LLM, tool, cascading, and healthy traces.
   - 100% Top-1 attribution accuracy across all failure scenarios (14/14).
   - 0/3 false-positive rate on healthy traces.
-  - Automated CI enforcement in `tests/test_blame_benchmark.py` (60 passing tests).
+  - Automated CI enforcement in `tests/test_blame_benchmark.py` (67 passing tests).

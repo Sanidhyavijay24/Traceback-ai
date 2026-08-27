@@ -116,7 +116,7 @@ Details: Significant quality regression in 'generate_answer' (delta: -0.43).
 
 Before traces are written to SQLite, each step is evaluated by registered step scorers:
 
-- **Retrieval Scorer (`step_type="retrieval"`)**: Measures semantic cosine similarity between the query input and retrieved chunks using `sentence-transformers` (`all-MiniLM-L6-v2`), clamped to `[0.0, 1.0]`. Automatically falls back to pure-Python BM25 keyword overlap if dependencies are absent. Flags weak retrieval when score $< 0.55$.
+- **Retrieval Scorer (`step_type="retrieval"`)**: Measures semantic cosine similarity between the query input and retrieved chunks using `sentence-transformers` (`all-MiniLM-L6-v2`), clamped to `[0.0, 1.0]`. Automatically falls back to pure-Python BM25 term overlap if dependencies are absent. Uses method-aware thresholding (flags weak retrieval when score $< 0.55$ for semantic embeddings, or $< 0.33$ for BM25 term overlap).
 - **LLM Scorer (`step_type="llm"`)**: Evaluates a composite of **response completeness** (scaled against an absolute floor of `20` tokens so concise correct answers to large RAG prompts are never penalized), **refusal detection** (detects refusal strings like `"I cannot"`, `"As an AI"` and zeroes the score), and **self-consistency** (pairwise ROUGE-L across multi-sample completions).
 - **Tool Scorer (`step_type="tool"`)**: Evaluates exceptions, validates non-empty payloads, validates against optional `expected_type` metadata, and dynamically penalizes based on historical failure rates in SQLite.
 
@@ -134,10 +134,10 @@ $$\text{blame\_score}(\text{step}) = (1.0 - \text{step.score}) \times \text{weig
 
 ### 📊 Benchmark Accuracy
 
-`traceback-ai` is continuously evaluated across 18 realistic failure and healthy scenarios spanning retrieval, LLM, tool, and cascading degradations ([`benchmarks/blame_accuracy.py`](file:///c:/Codes/tracebackai/benchmarks/blame_accuracy.py)):
+`traceback-ai` is continuously evaluated across 19 realistic failure and healthy scenarios spanning retrieval, LLM, tool, conversational BM25, and cascading degradations ([`benchmarks/blame_accuracy.py`](file:///c:/Codes/tracebackai/benchmarks/blame_accuracy.py)):
 
 - **Top-1 Attribution Accuracy**: **100.0%** (14/14 failure scenarios correctly attributed)
-- **False-Positive Rate**: **0/3 (0.0%)** on healthy traces (blame score remains $< 0.30$)
+- **False-Positive Rate**: **0/4 (0.0%)** on healthy traces (blame score remains $< 0.45$)
 - **Benchmark Runtime**: **< 0.2s** (100% offline, zero network access, zero external API keys)
 
 | Category | Correct | Total | Accuracy |

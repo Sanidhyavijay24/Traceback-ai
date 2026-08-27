@@ -27,13 +27,22 @@ except ImportError:
 
 def _extract_gemini_content(response: Any) -> str:
     """Extract output text from Gemini response object."""
-    if hasattr(response, "text") and response.text:
-        return response.text
+    try:
+        if hasattr(response, "text") and response.text:
+            return response.text
+    except Exception:
+        pass
     if hasattr(response, "candidates") and response.candidates:
-        candidate = response.candidates[0]
-        if hasattr(candidate, "content") and hasattr(candidate.content, "parts"):
-            parts_text = [p.text for p in candidate.content.parts if hasattr(p, "text")]
-            return "\n".join(parts_text)
+        try:
+            candidate = response.candidates[0]
+            if hasattr(candidate, "content") and hasattr(candidate.content, "parts"):
+                parts_text = [p.text for p in candidate.content.parts if hasattr(p, "text") and p.text]
+                if parts_text:
+                    return "\n".join(parts_text)
+            if hasattr(candidate, "finish_reason"):
+                return f"[Refusal / Blocked: {candidate.finish_reason}]"
+        except Exception:
+            pass
     return str(response)
 
 

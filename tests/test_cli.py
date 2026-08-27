@@ -106,3 +106,13 @@ def test_cli_show_not_found():
     result = runner.invoke(cli, ["show", "missing_id"])
     assert result.exit_code == 0
     assert "Error: Run ID 'missing_id' not found." in result.output
+
+
+def test_cli_serve_help():
+    """Verify traceback serve --help displays options."""
+    runner = CliRunner()
+    result = runner.invoke(cli, ["serve", "--help"])
+    assert result.exit_code == 0
+    assert "--port" in result.output
+    assert "--host" in result.output
+    assert "--no-browser" in result.output

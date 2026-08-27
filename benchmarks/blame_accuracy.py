@@ -513,8 +513,41 @@ def _build_healthy_multistep_trace(store: Store) -> Trace:
     return Trace(pipeline_name="healthy_support_pipeline", steps=[s1, s2, s3])
 
 
+def _build_healthy_conversational_bm25_trace(store: Store) -> Trace:
+    s1 = Step(
+        name="retrieve_db_indexing_docs",
+        step_type="retrieval",
+        input="How do database indexing strategies work?",
+        output=[
+            "B-tree indexes are the default index type in most relational databases.",
+            "A B-tree index speeds up lookups, range queries, and sorted retrieval.",
+            "Composite indexes cover queries filtering on multiple columns together.",
+        ],
+        latency_ms=115.0,
+    )
+    s2 = Step(
+        name="generate_indexing_explanation",
+        step_type="llm",
+        input="Context: B-tree indexes, composite indexes. Question: How do database indexing strategies work?",
+        output=(
+            "Database indexing strategies work by maintaining auxiliary data structures like B-trees "
+            "that allow the query engine to rapidly locate rows without scanning the entire table."
+        ),
+        latency_ms=920.0,
+    )
+    return Trace(pipeline_name="database_indexing_pipeline", steps=[s1, s2])
+
+
+def _bm25_forced_registry(store: Store) -> ScorerRegistry:
+    registry = ScorerRegistry()
+    registry.register(RetrievalScorer(force_method="bm25_fallback"))
+    registry.register(LLMScorer())
+    registry.register(ToolScorer(store=store))
+    return registry
+
+
 # -----------------------------------------------------------------------------
-# Scenario Registry (18 Scenarios)
+# Scenario Registry (19 Scenarios)
 # -----------------------------------------------------------------------------
 
 
@@ -523,6 +556,19 @@ def _skip_if_no_semantic_embeddings() -> Optional[str]:
     if model is None:
         return "sentence-transformers not available; semantic distractor requires dense embeddings."
     return None
+
+
+@dataclass
+class Scenario:
+    """Definition of a benchmark evaluation scenario."""
+
+    id: str
+    category: str
+    description: str
+    build_trace: Callable[[Store], Trace]
+    ground_truth_step_name: Optional[str]  # None for healthy traces
+    skip_if: Optional[Callable[[], Optional[str]]] = None
+    scorer_registry_factory: Optional[Callable[[Store], ScorerRegistry]] = None
 
 
 BENCHMARK_SCENARIOS: list[Scenario] = [
@@ -637,7 +683,7 @@ BENCHMARK_SCENARIOS: list[Scenario] = [
         build_trace=_build_all_unscored_latency_tie_trace,
         ground_truth_step_name="fetch_remote_payload",
     ),
-    # Healthy traces - false-positive checks (16-18)
+    # Healthy traces - false-positive checks (16-19)
     Scenario(
         id="healthy_16_clean_rag",
         category="healthy",
@@ -658,6 +704,14 @@ BENCHMARK_SCENARIOS: list[Scenario] = [
         description="Fully healthy multi-step agent (tool + retrieval + LLM synthesis).",
         build_trace=_build_healthy_multistep_trace,
         ground_truth_step_name=None,
+    ),
+    Scenario(
+        id="healthy_19_conversational_bm25_query",
+        category="healthy",
+        description="Topically on-topic database indexing query scored under BM25 fallback specifically.",
+        build_trace=_build_healthy_conversational_bm25_trace,
+        ground_truth_step_name=None,
+        scorer_registry_factory=_bm25_forced_registry,
     ),
 ]
 
@@ -708,11 +762,14 @@ def run_benchmark(scenarios: Optional[list[Scenario]] = None) -> dict[str, Any]:
             # Build realistic trace
             trace = sc.build_trace(store)
 
-            # Build scorer registry pointing to this store
-            registry = ScorerRegistry()
-            registry.register(RetrievalScorer())
-            registry.register(LLMScorer())
-            registry.register(ToolScorer(store=store))
+            # Build scorer registry
+            if sc.scorer_registry_factory:
+                registry = sc.scorer_registry_factory(store)
+            else:
+                registry = ScorerRegistry()
+                registry.register(RetrievalScorer())
+                registry.register(LLMScorer())
+                registry.register(ToolScorer(store=store))
 
             # Run through real scorers
             score_trace(trace, registry=registry)

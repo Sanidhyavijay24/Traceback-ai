@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from tracebackai.models import Step, Trace
-from tracebackai.scorers.retrieval import WEAK_RETRIEVAL_THRESHOLD
+from tracebackai.scorers.retrieval import WEAK_RETRIEVAL_THRESHOLD, get_retrieval_threshold
 from tracebackai.store import Store
 
 TYPE_WEIGHTS: dict[str, float] = {
@@ -78,16 +78,19 @@ def _generate_explanation(step: Step, score: Optional[float], is_latency_fallbac
         chunks_count = meta.get("retrieval_chunks_count", 0)
         if chunks_count == 0:
             return "Retrieval returned no document chunks. Downstream steps received empty context."
+        threshold = get_retrieval_threshold(step)
         top_sim = meta.get("top_similarity")
-        if top_sim is not None:
+        if score_val < threshold:
+            if top_sim is not None:
+                return (
+                    f"Retrieval relevance score was {score_val:.2f} (below threshold {threshold:.2f}). "
+                    f"Top chunk similarity was {top_sim:.2f}. Downstream steps received low-quality context."
+                )
             return (
-                f"Retrieval relevance score was {score_val:.2f} (below threshold {WEAK_RETRIEVAL_THRESHOLD:.2f}). "
-                f"Top chunk similarity was {top_sim:.2f}. Downstream steps received low-quality context."
+                f"Retrieved passages had low query similarity ({score_val:.2f} < {threshold:.2f}). "
+                f"Downstream steps were starved of relevant context."
             )
-        return (
-            f"Retrieved passages had low query similarity ({score_val:.2f} < {WEAK_RETRIEVAL_THRESHOLD:.2f}). "
-            f"Downstream steps were starved of relevant context."
-        )
+        return f"Retrieval relevance was healthy (score: {score_val:.2f} >= threshold {threshold:.2f})."
 
     if stype == "llm":
         if meta.get("refusal_detected"):

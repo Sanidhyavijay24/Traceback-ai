@@ -6,7 +6,13 @@ from typing import Optional
 
 from tracebackai.scorers.base import BaseScorer
 from tracebackai.scorers.llm import LLMScorer
-from tracebackai.scorers.retrieval import RetrievalScorer, WEAK_RETRIEVAL_THRESHOLD
+from tracebackai.scorers.retrieval import (
+    BM25_RETRIEVAL_THRESHOLD,
+    SEMANTIC_RETRIEVAL_THRESHOLD,
+    WEAK_RETRIEVAL_THRESHOLD,
+    RetrievalScorer,
+    get_retrieval_threshold,
+)
 from tracebackai.scorers.tool import ToolScorer
 
 
@@ -36,4 +42,7 @@ __all__ = [
     "ToolScorer",
     "ScorerRegistry",
     "WEAK_RETRIEVAL_THRESHOLD",
+    "SEMANTIC_RETRIEVAL_THRESHOLD",
+    "BM25_RETRIEVAL_THRESHOLD",
+    "get_retrieval_threshold",
 ]

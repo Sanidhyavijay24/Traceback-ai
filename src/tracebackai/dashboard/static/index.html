@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRACEBACK AI // Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Michroma&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- System Shell -->
+  <div id="app" class="mission-shell">
+    
+    <!-- Top Instrument Bar -->
+    <header class="instrument-header">
+      <div class="header-left">
+        <a href="#runs" class="brand-link" id="nav-brand" title="Return to Run Telemetry Log">
+          <span class="brand-prefix">//</span>
+          <span class="brand-title">TRACEBACK</span>
+          <span class="brand-sub">MISSION CONTROL</span>
+        </a>
+      </div>
+
+      <!-- Live Telemetry Status Readout -->
+      <div class="header-telemetry" id="header-telemetry">
+        <div class="telemetry-pill">
+          <span class="telemetry-label">STORE</span>
+          <span class="telemetry-val" id="stat-store-path">SQLITE: ACTIVE</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-pill">
+          <span class="telemetry-label">LOGGED RUNS</span>
+          <span class="telemetry-val" id="stat-total-runs">--</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-pill">
+          <span class="telemetry-label">TOTAL STEPS</span>
+          <span class="telemetry-val" id="stat-total-steps">--</span>
+        </div>
+        <div class="telemetry-divider"></div>
+        <div class="telemetry-pill">
+          <span class="telemetry-label">PIPELINES</span>
+          <span class="telemetry-val" id="stat-pipelines">--</span>
+        </div>
+      </div>
+
+      <!-- Navigation & Controls -->
+      <nav class="header-nav">
+        <button type="button" class="nav-btn active" id="btn-nav-runs" onclick="app.navigate('runs')">
+          <span class="nav-icon">≡</span> FLIGHT LOG
+        </button>
+        <button type="button" class="nav-btn" id="btn-nav-diff" onclick="app.navigate('diff')">
+          <span class="nav-icon">⇄</span> COMPARE DIFF
+        </button>
+        <button type="button" class="nav-btn icon-only" id="btn-refresh" title="Poll latest traces" onclick="app.refreshCurrentView()">
+          ↻
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Mission Deck -->
+    <main class="mission-deck" id="mission-deck">
+      
+      <!-- VIEW 1: RUNS LOG -->
+      <section id="view-runs" class="view-panel active">
+        <!-- Controls & Filter Deck -->
+        <div class="control-deck">
+          <div class="control-group">
+            <label class="control-label" for="filter-pipeline">PIPELINE FILTER</label>
+            <select id="filter-pipeline" class="control-select" onchange="app.onFilterChange()">
+              <option value="all">ALL PIPELINES</option>
+            </select>
+          </div>
+
+          <div class="control-group search-group">
+            <label class="control-label" for="filter-search">SEARCH TELEMETRY</label>
+            <input type="text" id="filter-search" class="control-input" placeholder="Search by Run ID or pipeline name..." oninput="app.onSearchInput(this.value)">
+          </div>
+
+          <div class="control-group limit-group">
+            <label class="control-label" for="filter-limit">LIMIT</label>
+            <select id="filter-limit" class="control-select" onchange="app.onFilterChange()">
+              <option value="25">25 RUNS</option>
+              <option value="50" selected>50 RUNS</option>
+              <option value="100">100 RUNS</option>
+            </select>
+          </div>
+
+          <div class="control-actions">
+            <button type="button" class="btn btn-secondary" id="btn-toggle-compare" onclick="app.toggleCompareMode()">
+              <span id="compare-mode-text">SELECT FOR DIFF</span>
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-launch-diff" style="display: none;" onclick="app.launchSelectedDiff()">
+              DIFF SELECTED (<span id="selected-diff-count">0</span>/2)
+            </button>
+          </div>
+        </div>
+
+        <!-- Runs Log Table Container -->
+        <div class="table-container" id="runs-table-container">
+          <table class="telemetry-table" id="runs-table">
+            <thead>
+              <tr>
+                <th class="col-select" id="th-select" style="display: none;">CMP</th>
+                <th class="col-id">RUN ID</th>
+                <th class="col-pipeline">PIPELINE</th>
+                <th class="col-steps">STEPS</th>
+                <th class="col-start">TIMESTAMP</th>
+                <th class="col-duration">DURATION</th>
+                <th class="col-status">DIAGNOSTIC STATUS</th>
+                <th class="col-actions">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="runs-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Zero-State Container -->
+        <div id="runs-zero-state" class="zero-state-panel" style="display: none;">
+          <div class="zero-state-glyph">// NO TELEMETRY RECORDED</div>
+          <h2 class="zero-state-title">AWAITING AGENT FLIGHT LOGS</h2>
+          <p class="zero-state-desc">
+            No execution traces detected in the active SQLite database. Execute an instrumented agent pipeline or run the CLI evaluator to stream telemetry.
+          </p>
+          <div class="zero-state-codebox">
+            <div class="codebox-header">EXAMPLE TELEMETRY INSTRUMENTATION</div>
+            <pre><code>from tracebackai import trace, TraceContext
+
+@trace(step_type="retrieval")
+def retrieve_context(query: str):
+    return ["passage 1", "passage 2"]
+
+with TraceContext(pipeline_name="customer_rag"):
+    docs = retrieve_context("How do I configure telemetry?")</code></pre>
+          </div>
+          <div class="zero-state-cli-hint">
+            Or launch a benchmark test run: <code>python benchmarks/blame_accuracy.py</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2 & 3: TRACE DETAIL & BLAME INSPECTOR -->
+      <section id="view-detail" class="view-panel" style="display: none;">
+        <!-- Trace Header Banner -->
+        <div class="trace-banner" id="trace-banner">
+          <div class="trace-banner-left">
+            <div class="banner-breadcrumbs">
+              <a href="#runs" class="breadcrumb-link" onclick="app.navigate('runs')">← FLIGHT LOG</a>
+              <span class="breadcrumb-sep">/</span>
+              <span class="breadcrumb-current" id="detail-run-id">RUN #---------</span>
+            </div>
+            <h1 class="trace-banner-title" id="detail-pipeline-name">PIPELINE: ---------</h1>
+          </div>
+
+          <div class="trace-banner-metrics">
+            <div class="banner-stat">
+              <span class="stat-label">START TIME</span>
+              <span class="stat-value mono" id="detail-start-ts">--:--:--</span>
+            </div>
+            <div class="banner-stat">
+              <span class="stat-label">TOTAL LATENCY</span>
+              <span class="stat-value mono" id="detail-duration">--ms</span>
+            </div>
+            <div class="banner-stat">
+              <span class="stat-label">TOTAL TOKENS</span>
+              <span class="stat-value mono" id="detail-tokens">-- tok</span>
+            </div>
+            <div class="banner-stat">
+              <span class="stat-label">TOTAL COST</span>
+              <span class="stat-value mono" id="detail-cost">$0.0000</span>
+            </div>
+            <div class="banner-stat">
+              <span class="stat-label">STATUS</span>
+              <span class="stat-value" id="detail-status-pill">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trace Content Split Layout -->
+        <div class="trace-layout">
+          
+          <!-- Flight Path Strip (Centerpiece) -->
+          <div class="flight-strip-column">
+            <div class="strip-header">
+              <div class="strip-title-wrap">
+                <span class="strip-tag">// SIGNATURE TELEMETRY</span>
+                <h2 class="strip-title">FLIGHT-PATH SEQUENCE</h2>
+              </div>
+              <div class="strip-view-controls">
+                <button type="button" class="btn-subtle active" id="btn-toggle-view-trace" onclick="app.setDetailViewMode('timeline')">
+                  TIMELINE
+                </button>
+                <button type="button" class="btn-subtle" id="btn-toggle-view-blame" onclick="app.setDetailViewMode('blame')">
+                  FAULT ATTRIBUTION
+                </button>
+              </div>
+            </div>
+
+            <!-- The Flight-Path Strip Nodes Container -->
+            <div class="flight-strip-container" id="flight-strip-container">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Final Output Telemetry Box -->
+            <div class="final-output-box" id="final-output-box">
+              <div class="output-header">
+                <span class="output-label">TRACE FINAL OUTPUT PAYLOAD</span>
+                <button type="button" class="btn-copy" onclick="app.copyFinalOutput()" title="Copy payload">COPY</button>
+              </div>
+              <pre class="output-content mono" id="detail-final-output">None</pre>
+            </div>
+          </div>
+
+          <!-- Telemetry Inspector Side-Panel -->
+          <aside class="telemetry-inspector" id="telemetry-inspector">
+            <div class="inspector-header">
+              <div class="inspector-tag">// STEP TELEMETRY INSPECTOR</div>
+              <h3 class="inspector-title" id="inspector-step-title">SELECT A NODE</h3>
+              <div class="inspector-meta-row">
+                <span class="inspector-meta-item" id="inspector-step-type">TYPE: --</span>
+                <span class="inspector-meta-item" id="inspector-step-index">STEP: --</span>
+                <span class="inspector-meta-item" id="inspector-step-score">SCORE: --</span>
+              </div>
+            </div>
+
+            <div class="inspector-body" id="inspector-body">
+              <!-- Latency / Tokens / Cost Grid -->
+              <div class="inspector-metrics-grid">
+                <div class="metric-cell">
+                  <span class="metric-cell-label">LATENCY</span>
+                  <span class="metric-cell-val mono" id="insp-latency">--</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-cell-label">TOKENS</span>
+                  <span class="metric-cell-val mono" id="insp-tokens">--</span>
+                </div>
+                <div class="metric-cell">
+                  <span class="metric-cell-label">COST</span>
+                  <span class="metric-cell-val mono" id="insp-cost">--</span>
+                </div>
+              </div>
+
+              <!-- Error Box (if present) -->
+              <div class="inspector-section" id="insp-error-section" style="display: none;">
+                <div class="section-label fault-label">UNHANDLED EXCEPTION / FAULT</div>
+                <pre class="fault-box-pre mono" id="insp-error-text"></pre>
+              </div>
+
+              <!-- Input Payload -->
+              <div class="inspector-section">
+                <div class="section-header-bar">
+                  <span class="section-label">INPUT PAYLOAD</span>
+                  <button type="button" class="btn-copy" onclick="app.copyInspectorField('input')">COPY</button>
+                </div>
+                <div class="payload-box mono" id="insp-input-payload">None</div>
+              </div>
+
+              <!-- Output Payload -->
+              <div class="inspector-section">
+                <div class="section-header-bar">
+                  <span class="section-label">OUTPUT PAYLOAD</span>
+                  <button type="button" class="btn-copy" onclick="app.copyInspectorField('output')">COPY</button>
+                </div>
+                <div class="payload-box mono" id="insp-output-payload">None</div>
+              </div>
+
+              <!-- Metadata & Subscores -->
+              <div class="inspector-section">
+                <div class="section-header-bar">
+                  <span class="section-label">METADATA & SCORER PARAMETERS</span>
+                  <button type="button" class="btn-copy" onclick="app.copyInspectorField('metadata')">COPY</button>
+                </div>
+                <div class="payload-box mono" id="insp-metadata-payload">{}</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- VIEW 4: DIFF COMPARISON -->
+      <section id="view-diff" class="view-panel" style="display: none;">
+        <!-- Diff Configuration Bar -->
+        <div class="diff-control-deck">
+          <div class="diff-picker-group">
+            <label class="control-label" for="diff-select-a">BASELINE RUN (A)</label>
+            <select id="diff-select-a" class="control-select mono" onchange="app.onDiffSelectorChange()">
+              <option value="">Select baseline trace...</option>
+            </select>
+          </div>
+
+          <div class="diff-picker-arrow">⇄</div>
+
+          <div class="diff-picker-group">
+            <label class="control-label" for="diff-select-b">COMPARISON RUN (B)</label>
+            <select id="diff-select-b" class="control-select mono" onchange="app.onDiffSelectorChange()">
+              <option value="">Select comparison trace...</option>
+            </select>
+          </div>
+
+          <div class="diff-action-group">
+            <button type="button" class="btn btn-primary" id="btn-execute-diff" onclick="app.executeDiff()">
+              COMPUTE TRAJECTORY DIFF
+            </button>
+          </div>
+        </div>
+
+        <!-- Diff Verdict Deck -->
+        <div class="diff-verdict-deck" id="diff-verdict-deck" style="display: none;">
+          <div class="verdict-banner" id="verdict-banner">
+            <div class="verdict-tag">// COMPARATIVE TRAJECTORY VERDICT</div>
+            <div class="verdict-title" id="verdict-title">VERDICT: NEUTRAL</div>
+            <div class="verdict-explanation" id="verdict-explanation">No significant quality regression detected.</div>
+          </div>
+        </div>
+
+        <!-- Diff Step Comparisons Table -->
+        <div class="table-container" id="diff-results-container" style="display: none;">
+          <table class="telemetry-table diff-table" id="diff-table">
+            <thead>
+              <tr>
+                <th class="col-step-name">STEP NAME</th>
+                <th class="col-score-a">RUN A SCORE</th>
+                <th class="col-score-b">RUN B SCORE</th>
+                <th class="col-delta">DELTA</th>
+                <th class="col-diff-status">TRAJECTORY STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="diff-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty Diff State -->
+        <div id="diff-zero-state" class="zero-state-panel">
+          <div class="zero-state-glyph">// TRAJECTORY REGRESSION DETECTOR</div>
+          <h2 class="zero-state-title">SELECT TWO RUNS TO COMPARE</h2>
+          <p class="zero-state-desc">
+            Select a baseline execution trace and a comparison trace above to inspect step-by-step health score deltas, regressions, additions, or structural divergence.
+          </p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Global Toast / Notice -->
+    <div id="toast" class="toast-notice" style="display: none;"></div>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

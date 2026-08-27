@@ -15,7 +15,10 @@ from tracebackai.scorers.base import BaseScorer
 
 logger = logging.getLogger(__name__)
 
-WEAK_RETRIEVAL_THRESHOLD = 0.55
+# Thresholds for weak retrieval detection based on scoring methodology
+SEMANTIC_RETRIEVAL_THRESHOLD = 0.55
+BM25_RETRIEVAL_THRESHOLD = 0.33
+WEAK_RETRIEVAL_THRESHOLD = 0.55  # Maintained for backward compatibility
 
 _MODEL_INSTANCE: Any = None
 _MODEL_LOAD_FAILED = False
@@ -25,7 +28,22 @@ STOP_WORDS = {
     "a", "an", "the", "in", "on", "at", "to", "for", "of", "and", "or", "is",
     "are", "was", "were", "be", "been", "being", "with", "as", "by", "what",
     "which", "who", "whom", "this", "that", "these", "those", "how", "why",
+    "do", "does", "did", "have", "has", "had", "can", "could", "should", "would",
+    "from", "it", "its", "they", "them", "their", "will", "shall",
 }
+
+
+def get_retrieval_threshold(step_or_method: Any) -> float:
+    """Return the appropriate weak retrieval threshold based on scoring method."""
+    method = None
+    if isinstance(step_or_method, str):
+        method = step_or_method
+    elif hasattr(step_or_method, "metadata") and isinstance(step_or_method.metadata, dict):
+        method = step_or_method.metadata.get("retrieval_score_method")
+
+    if method == "bm25_fallback":
+        return BM25_RETRIEVAL_THRESHOLD
+    return SEMANTIC_RETRIEVAL_THRESHOLD
 
 
 def _get_sentence_transformer() -> Any:
@@ -43,7 +61,7 @@ def _get_sentence_transformer() -> Any:
             if not _WARNED_FALLBACK:
                 logger.warning(
                     "sentence-transformers not available or failed to load. "
-                    "Falling back to BM25 term overlap. Install with: pip install agent-blame[semantic]"
+                    "Falling back to BM25 term overlap. Install with: pip install traceback-ai[semantic]"
                 )
                 _WARNED_FALLBACK = True
             return None
@@ -124,11 +142,37 @@ def _tokenize(text: str) -> list[str]:
 
 
 def _stem(word: str) -> str:
-    """Basic rule-based suffix normalization for robust keyword overlap."""
-    w = word.lower()
-    for suffix in ("ing", "tions", "tion", "ted", "ed", "ers", "er", "al", "ment", "es", "s"):
+    """
+    Rule-based suffix normalization for robust keyword overlap.
+    Handles singular/plural symmetry for -e/-es final words, y/ies, and inflections.
+    """
+    w = word.lower().strip()
+    if len(w) <= 2:
+        return w
+
+    # Step 1: Plurals and 'y'/'ies'
+    if w.endswith("ies") and len(w) > 4:
+        w = w[:-3] + "y"
+    elif w.endswith("es") and len(w) > 4:
+        if w.endswith(("ses", "xes", "zes", "ches", "shes")):
+            w = w[:-2]
+        else:
+            w = w[:-1]  # databases -> database, caches -> cache, phases -> phase
+    elif w.endswith("s") and not w.endswith("ss") and len(w) > 3:
+        w = w[:-1]
+
+    # Step 2: Suffixes
+    for suffix in ("ing", "tions", "tion", "ted", "ed", "ers", "er", "al", "ment", "ments", "ity", "ities"):
         if w.endswith(suffix) and len(w) > len(suffix) + 2:
-            return w[:-len(suffix)]
+            w = w[:-len(suffix)]
+            break
+
+    # Step 3: Normalize 'y' and trailing 'e' for invariant base form
+    if w.endswith("y") and len(w) > 3:
+        w = w[:-1]  # strategy -> strateg, query -> quer
+    if w.endswith("e") and len(w) > 3:
+        w = w[:-1]  # database -> databas, cache -> cach, phase -> phas, service -> servic
+
     return w
 
 
@@ -172,14 +216,32 @@ def _bm25_similarity(query: str, chunks: list[str]) -> float:
 
     chunk_scores.sort(reverse=True)
     top_scores = chunk_scores[:3]
-    mean_top = sum(top_scores) / len(top_scores)
-    return max(0.0, min(1.0, mean_top))
+
+    # In IR/RAG, the top matching chunk is primary; blend top-1 with remaining top chunks
+    if len(top_scores) == 1:
+        raw_score = top_scores[0]
+    else:
+        rest_mean = sum(top_scores[1:]) / len(top_scores[1:])
+        raw_score = (0.7 * top_scores[0]) + (0.3 * rest_mean)
+
+    # Calibrate raw keyword overlap to standard [0.0, 1.0] health quality scale
+    if raw_score <= 0.0:
+        calibrated = 0.0
+    elif raw_score < 0.25:
+        calibrated = raw_score * 2.0  # [0.0, 0.25) -> [0.0, 0.50)
+    else:
+        calibrated = min(1.0, 0.50 + (raw_score - 0.25) * 1.5)  # [0.25, 0.60+] -> [0.50, 1.0]
+
+    return max(0.0, min(1.0, round(calibrated, 4)))
 
 
 class RetrievalScorer(BaseScorer):
     """Scorer for retrieval steps computing query-to-chunk relevance."""
 
     step_type: str = "retrieval"
+
+    def __init__(self, force_method: Optional[str] = None) -> None:
+        self.force_method = force_method
 
     def score(self, step: Step) -> float:
         """Compute retrieval score in [0.0, 1.0] from step input and output."""
@@ -191,27 +253,28 @@ class RetrievalScorer(BaseScorer):
             step.metadata["retrieval_score_method"] = "empty"
             return 0.0
 
-        model = _get_sentence_transformer()
-        if model is not None:
-            try:
-                import numpy as np
+        if self.force_method != "bm25_fallback":
+            model = _get_sentence_transformer()
+            if model is not None:
+                try:
+                    import numpy as np
 
-                query_emb = model.encode([query], normalize_embeddings=True)[0]
-                chunk_embs = model.encode(chunks, normalize_embeddings=True)
+                    query_emb = model.encode([query], normalize_embeddings=True)[0]
+                    chunk_embs = model.encode(chunks, normalize_embeddings=True)
 
-                sims = [float(np.dot(query_emb, c_emb)) for c_emb in chunk_embs]
-                sims.sort(reverse=True)
-                top_sims = sims[:3]
-                mean_sim = sum(top_sims) / len(top_sims)
-                clamped_score = max(0.0, min(1.0, mean_sim))
+                    sims = [float(np.dot(query_emb, c_emb)) for c_emb in chunk_embs]
+                    sims.sort(reverse=True)
+                    top_sims = sims[:3]
+                    mean_sim = sum(top_sims) / len(top_sims)
+                    clamped_score = max(0.0, min(1.0, mean_sim))
 
-                step.metadata["top_similarity"] = round(top_sims[0], 4) if top_sims else 0.0
-                step.metadata["mean_top3_similarity"] = round(mean_sim, 4)
-                step.metadata["retrieval_chunks_count"] = len(chunks)
-                step.metadata["retrieval_score_method"] = "sentence_transformers"
-                return round(clamped_score, 4)
-            except Exception as e:
-                logger.debug(f"SentenceTransformer encoding failed: {e}. Using BM25 fallback.")
+                    step.metadata["top_similarity"] = round(top_sims[0], 4) if top_sims else 0.0
+                    step.metadata["mean_top3_similarity"] = round(mean_sim, 4)
+                    step.metadata["retrieval_chunks_count"] = len(chunks)
+                    step.metadata["retrieval_score_method"] = "sentence_transformers"
+                    return round(clamped_score, 4)
+                except Exception as e:
+                    logger.debug(f"SentenceTransformer encoding failed: {e}. Using BM25 fallback.")
 
         # Fallback to term overlap
         bm25_score = _bm25_similarity(query, chunks)
