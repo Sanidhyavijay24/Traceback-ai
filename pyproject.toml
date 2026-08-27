@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agent-blame"
-version = "0.1.0"
+version = "0.1.1"
 description = "LLM agent execution tracer with failure attribution"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -168,7 +168,25 @@ def blame_trace(trace: Trace) -> BlameResult:
         step_score = max(0.0, min(1.0, step.score if step.score is not None else 1.0))
         t_weight = TYPE_WEIGHTS.get(step.step_type, 1.0)
         r_weight = _compute_recency_weight(step.index, total_steps)
-        b_score = (1.0 - step_score) * t_weight * r_weight
+
+        # Determine if step met its healthy quality threshold
+        if step.step_type == "retrieval":
+            thresh = get_retrieval_threshold(step)
+            is_healthy = step_score >= thresh
+        elif step.step_type == "llm":
+            is_healthy = step_score >= 0.75
+        elif step.step_type == "tool":
+            is_healthy = step_score >= 0.80
+        else:
+            is_healthy = step_score >= 0.70
+
+        # Steps passing quality thresholds have attenuated residual deficiency
+        if is_healthy:
+            deficiency = (1.0 - step_score) * 0.25
+        else:
+            deficiency = 1.0 - step_score
+
+        b_score = deficiency * t_weight * r_weight
         candidates.append((step, b_score))
 
     # Sort descending by blame score
@@ -178,9 +196,10 @@ def blame_trace(trace: Trace) -> BlameResult:
 
     # Co-blame and confidence calculation
     co_blamed: list[Step] = []
-    confidence = "high"
 
-    if len(candidates) > 1:
+    if top_blame_score < 0.40:
+        confidence = "low"
+    elif len(candidates) > 1:
         second_step, second_score = candidates[1]
         gap = top_blame_score - second_score
         if gap < 0.05:

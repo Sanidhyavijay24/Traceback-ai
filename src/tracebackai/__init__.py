@@ -29,7 +29,7 @@ from tracebackai.tracer import TraceContext, get_active_trace, trace
 
 from tracebackai.dashboard import create_server, start_server
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     "Step",
     "Trace",
