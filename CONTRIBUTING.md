@@ -1,13 +1,13 @@
-# Contributing to Traceback AI
+# Contributing to Traceback AI (`agent-blame`)
 
-Thank you for contributing to Traceback AI!
+Thank you for contributing to Traceback AI (`agent-blame` on PyPI)!
 
 ## Development Setup
 
 1. **Clone and setup repository:**
    ```bash
-   git clone https://github.com/Sanidhyavijay24/traceback-ai.git
-   cd traceback-ai
+   git clone https://github.com/Sanidhyavijay24/Traceback-ai.git
+   cd Traceback-ai
    ```
 
 2. **Install in editable development mode:**

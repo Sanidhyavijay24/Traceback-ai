@@ -436,3 +436,81 @@ def test_end_to_end_traced_pipeline_with_scoring():
 
     assert steps_by_name["save_metric"].score is not None
     assert steps_by_name["save_metric"].score >= 0.9
+
+
+def test_retrieval_scorer_semantic_path_mocked(monkeypatch):
+    """
+    Directly verify the sentence-transformers semantic scoring code path
+    (embedding generation, numpy cosine dot-product, sorting, top3 averaging, metadata).
+    """
+    import numpy as np
+
+    class MockSentenceTransformer:
+        def encode(self, texts: list[str], normalize_embeddings: bool = True) -> np.ndarray:
+            embs = []
+            for text in texts:
+                if "query" in text.lower():
+                    # Base query unit vector [1, 0, 0]
+                    embs.append([1.0, 0.0, 0.0])
+                elif "perfect" in text.lower():
+                    # 100% cosine similarity [1, 0, 0]
+                    embs.append([1.0, 0.0, 0.0])
+                elif "partial" in text.lower():
+                    # 0.80 cosine similarity [0.8, 0.6, 0]
+                    embs.append([0.8, 0.6, 0.0])
+                elif "moderate" in text.lower():
+                    # 0.60 cosine similarity [0.6, 0.8, 0]
+                    embs.append([0.6, 0.8, 0.0])
+                else:
+                    # Orthogonal 0.0 similarity [0, 1, 0]
+                    embs.append([0.0, 1.0, 0.0])
+            return np.array(embs, dtype=np.float32)
+
+    monkeypatch.setattr(
+        "tracebackai.scorers.retrieval._get_sentence_transformer",
+        lambda: MockSentenceTransformer(),
+    )
+
+    scorer = RetrievalScorer()
+    step = Step(
+        step_type="retrieval",
+        input="test query",
+        output=[
+            "perfect matching document passage",
+            "partial matching context",
+            "moderate matching information",
+            "unrelated content",
+        ],
+    )
+    score = scorer.score(step)
+
+    # Top 3 similarities are 1.0, 0.8, 0.6 -> Mean = 0.80
+    assert step.metadata["retrieval_score_method"] == "sentence_transformers"
+    assert step.metadata["top_similarity"] == 1.0
+    assert step.metadata["mean_top3_similarity"] == 0.8
+    assert step.metadata["retrieval_chunks_count"] == 4
+    assert score == 0.8
+
+
+def test_retrieval_scorer_semantic_path_error_fallback(monkeypatch):
+    """Verify semantic path gracefully falls back to BM25 if model.encode raises an error."""
+    class BrokenSentenceTransformer:
+        def encode(self, texts: list[str], normalize_embeddings: bool = True):
+            raise RuntimeError("CUDA out of memory during encoding")
+
+    monkeypatch.setattr(
+        "tracebackai.scorers.retrieval._get_sentence_transformer",
+        lambda: BrokenSentenceTransformer(),
+    )
+
+    scorer = RetrievalScorer()
+    step = Step(
+        step_type="retrieval",
+        input="database indexing",
+        output=["database indexing speeds up query search"],
+    )
+    score = scorer.score(step)
+
+    # Cleanly falls back to BM25 without raising
+    assert step.metadata["retrieval_score_method"] == "bm25_fallback"
+    assert score > 0.5

@@ -52,7 +52,7 @@ class TracedGemini:
     def __init__(self, api_key: Optional[str] = None, **kwargs: Any) -> None:
         if not _GENAI_AVAILABLE:
             raise ImportError(
-                "Google GenAI SDK is not installed. Install with: pip install google-genai"
+                "Google GenAI SDK is not installed. Install with: pip install agent-blame[gemini]"
             )
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
